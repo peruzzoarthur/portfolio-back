@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres 
+    container_name: portfolio 
+    restart: "no"
+    environment:
+      POSTGRES_USER: ozzu 
+      POSTGRES_PASSWORD: marij 
+      POSTGRES_DB: portfolio 
+    ports:
+      - "5436:5432"  
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - server_my_custom_network
+
+networks:
+  server_my_custom_network:
+    external: true
+
+volumes:
+  postgres_data:
+
