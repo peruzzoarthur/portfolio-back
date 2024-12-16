@@ -1,15 +1,18 @@
-import { IsString } from "class-validator";
+import { IsInt, IsNumberString, IsString } from "class-validator";
 
 export class CreatePostDto {
-  @IsString()
-  title: string
-  @IsString()
-  abstract: string
+  @IsNumberString()
+  seriesId: string;
 
   @IsString()
-  imagesPath: string
+  title: string;
 
-  authorsIds: string
+  @IsString()
+  abstract: string;
 
-  content: string
+  @IsString()
+  imagesPath: string;
+
+  @IsString()
+  authorsIds: string;
 }

@@ -7,7 +7,7 @@ export class ImagesService {
 
   async createImages(
     images: { filename: string; data: Buffer }[],
-    articleId: number,
+    postId: number,
   ) {
     const created = await Promise.all(
       images.map((image) => {
@@ -15,7 +15,7 @@ export class ImagesService {
           data: {
             filename: image.filename,
             data: image.data,
-            articleId: articleId,
+            postId: postId,
           },
         });
       }),
@@ -23,9 +23,9 @@ export class ImagesService {
     return created;
   }
 
-  async getImageByFilenameAndArticleId(articleId: number, filename: string) {
+  async getImageByFilenameAndArticleId(postId: number, filename: string) {
     const image = await this.prisma.image.findUnique({
-      where: { filename: filename, articleId: articleId },
+      where: { filename: filename, postId: postId },
     });
 
     if (!image) {
