@@ -1,9 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { PrismaService } from 'src/prisma.service';
+import { Injectable, NotFoundException } from "@nestjs/common";
+import { PrismaService } from "src/prisma.service";
 
 @Injectable()
 export class ImagesService {
-  constructor(private prisma: PrismaService) { }
+  constructor(private prisma: PrismaService) {}
 
   async createImages(
     images: { filename: string; data: Buffer }[],
@@ -13,7 +13,7 @@ export class ImagesService {
       images.map((image) => {
         return this.prisma.image.create({
           data: {
-            filename: image.filename,
+            filename: `${postId}_${image.filename}`,
             data: image.data,
             postId: postId,
           },
@@ -29,7 +29,7 @@ export class ImagesService {
     });
 
     if (!image) {
-      throw new NotFoundException('Image not found');
+      throw new NotFoundException("Image not found");
     }
 
     return image;

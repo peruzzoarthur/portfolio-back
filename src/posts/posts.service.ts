@@ -3,7 +3,6 @@ import { PrismaService } from "src/prisma.service";
 import * as path from "path";
 import { existsSync, readFileSync } from "fs";
 import { ImagesService } from "src/images/images.service";
-import { UpdatePostDto } from "./dto/update-post.dto";
 
 @Injectable()
 export class PostsService {
@@ -213,26 +212,38 @@ export class PostsService {
   }
 
   extractFromMd(content: string, basePath: string) {
+    // Array to store extracted image information
     const images: { filename: string; data: Buffer }[] = [];
-
+    
+    // Use regex to find and process Markdown image references
     const updatedContent = content.replace(
       /!\[.*?\]\((.*?)\)/g,
       (match, imagePath: string) => {
+        // Resolve the full path of the image relative to the base path
         const fullPath = path.resolve(basePath, imagePath);
-
+        
+        // Check if the image file exists
         if (existsSync(fullPath)) {
+          // Read the image file into a buffer
           const imageBuffer = readFileSync(fullPath);
+          
+          // Extract the filename from the image path
           const filename = path.basename(imagePath);
-
-          console.log(imageBuffer);
+          
+          // Add image info to the images array
           images.push({ filename, data: imageBuffer });
-
+          
+          // Update the image path in the Markdown content
+          // Replace original path with a standardized 'images/' path
           return match.replace(imagePath, `images/${filename}`);
         }
+        
+        // If file doesn't exist, return the original match
         return match;
       },
     );
-
+    
+    // Return the modified content and extracted images
     return { updatedContent, images };
-  }
+}
 }

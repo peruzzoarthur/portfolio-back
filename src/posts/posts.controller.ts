@@ -35,10 +35,11 @@ export class PostsController {
     this.validateFile(file);
 
     const content = file.buffer.toString("utf-8");
-    const authorsIds: string[] = JSON.parse(createPostDto.authorsIds);
-    const title: string = JSON.parse(createPostDto.title);
-    const abstract: string = JSON.parse(createPostDto.abstract);
-    const imagesPath: string = JSON.parse(createPostDto.imagesPath);
+    const seriesId = safeParse<string>(createPostDto.seriesId);
+    const title = safeParse<string>(createPostDto.title);
+    const abstract = safeParse<string>(createPostDto.abstract);
+    const imagesPath = safeParse<string>(createPostDto.imagesPath);
+    const authorsIds = safeParse<string[]>(createPostDto.authorsIds);
 
     const { updatedContent, images } = this.postsService.extractFromMd(
       content,
@@ -46,7 +47,7 @@ export class PostsController {
     );
 
     return this.postsService.create(
-      Number(createPostDto.seriesId),
+      Number(seriesId),
       title,
       abstract,
       authorsIds,
