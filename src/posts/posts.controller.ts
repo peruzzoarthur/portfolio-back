@@ -11,18 +11,31 @@ import {
   BadRequestException,
   HttpException,
   HttpStatus,
+  UseGuards,
 } from "@nestjs/common";
 import { FileInterceptor } from "@nestjs/platform-express";
 import { PostsService } from "./posts.service";
 import { CreatePostDto } from "./dto/create-post.dto";
-import { UpdatePostDto } from "./dto/update-post.dto";
 import { safeParse } from "src/utils/safe-parse";
+import { UpdatePostDto } from "./dto/update-post.dto";
+import { LocalOnlyGuard } from "src/guards/local-only.guard";
 
 @Controller("posts")
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
+  @Get()
+  findAll() {
+    return this.postsService.findAll();
+  }
+
+  @Get(":id")
+  findOne(@Param("id") id: string) {
+    return this.postsService.findOne(+id);
+  }
+
   @Post()
+  @UseGuards(LocalOnlyGuard)
   @UseInterceptors(FileInterceptor("file", {}))
   async create(
     @Body() createPostDto: CreatePostDto,
@@ -56,50 +69,14 @@ export class PostsController {
     );
   }
 
-  private validateFile(file: Express.Multer.File) {
-    if (!file.mimetype.includes("markdown")) {
-      throw new HttpException(
-        "Only .md files are allowed.",
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const allowedExtensions = [".md"];
-    const fileExtension = file.originalname.split(".").pop();
-    if (!allowedExtensions.includes(`.${fileExtension}`)) {
-      throw new HttpException(
-        "Only .md files are allowed.",
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-
-    const maxSize = 5 * 1024 * 1024; // 5MB
-    if (file.size > maxSize) {
-      throw new HttpException(
-        "File size exceeds the 5MB limit.",
-        HttpStatus.BAD_REQUEST,
-      );
-    }
-  }
-
-  @Get()
-  findAll() {
-    return this.postsService.findAll();
-  }
-
-  @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.postsService.findOne(+id);
-  }
-
   @Patch(":id")
+  @UseGuards(LocalOnlyGuard)
   @UseInterceptors(FileInterceptor("file", {}))
   update(
     @Param("id") id: string,
     @Body() updatePostDto: UpdatePostDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-
     const seriesId = safeParse<string>(updatePostDto.seriesId);
     const title = safeParse<string>(updatePostDto.title);
     const abstract = safeParse<string>(updatePostDto.abstract);
@@ -107,10 +84,9 @@ export class PostsController {
     const authorsIds = safeParse<string[]>(updatePostDto.authorsIds);
 
     if (file) {
-
       this.validateFile(file);
 
-      // Process file content and extract md with images ref 
+      // Process file content and extract md with images ref
       const content = file.buffer.toString("utf-8");
       const { updatedContent, images } = this.postsService.extractFromMd(
         content,
@@ -140,7 +116,34 @@ export class PostsController {
   }
 
   @Delete(":id")
+  @UseGuards(LocalOnlyGuard)
   remove(@Param("id") id: string) {
     return this.postsService.remove(+id);
+  }
+
+  private validateFile(file: Express.Multer.File) {
+    if (!file.mimetype.includes("markdown")) {
+      throw new HttpException(
+        "Only .md files are allowed.",
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const allowedExtensions = [".md"];
+    const fileExtension = file.originalname.split(".").pop();
+    if (!allowedExtensions.includes(`.${fileExtension}`)) {
+      throw new HttpException(
+        "Only .md files are allowed.",
+        HttpStatus.BAD_REQUEST,
+      );
+    }
+
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    if (file.size > maxSize) {
+      throw new HttpException(
+        "File size exceeds the 5MB limit.",
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 }
