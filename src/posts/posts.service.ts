@@ -3,6 +3,7 @@ import { PrismaService } from "src/prisma.service";
 import * as path from "path";
 import { existsSync, readFileSync } from "fs";
 import { ImagesService } from "src/images/images.service";
+import { Tag } from "@prisma/client";
 
 @Injectable()
 export class PostsService {
@@ -18,6 +19,7 @@ export class PostsService {
     authorsIds: string[],
     content: string,
     images: { filename: string; data: Buffer }[],
+    tags: Tag[]
   ) {
     const post = await this.prisma.post.create({
       data: {
@@ -30,6 +32,7 @@ export class PostsService {
         authors: {
           connect: authorsIds.map((id) => ({ id: Number(id) })),
         },
+        tags: tags
       },
     });
 
@@ -87,7 +90,9 @@ export class PostsService {
             id: true,
           },
         },
+        tags: true
       },
+    
     });
     if (!post) {
       throw new HttpException("Post not found.", HttpStatus.NOT_FOUND);

@@ -1,4 +1,5 @@
-import { IsInt, IsNumberString, IsString } from "class-validator";
+import { Tag } from "@prisma/client";
+import { IsArray, IsEnum, IsNumberString, IsString } from "class-validator";
 
 export class CreatePostDto {
   @IsNumberString()
@@ -13,6 +14,11 @@ export class CreatePostDto {
   @IsString()
   imagesPath: string;
 
-  @IsString()
-  authorsIds: string;
+  @IsArray()
+  @IsString({ each: true })
+  authorsIds: string[];
+
+  @IsArray()
+  @IsEnum(Tag, { each: true })
+  tags: Tag[];
 }

@@ -24,16 +24,6 @@ import { LocalOnlyGuard } from "src/guards/local-only.guard";
 export class PostsController {
   constructor(private readonly postsService: PostsService) {}
 
-  @Get()
-  findAll() {
-    return this.postsService.findAll();
-  }
-
-  @Get(":id")
-  findOne(@Param("id") id: string) {
-    return this.postsService.findOne(+id);
-  }
-
   @Post()
   @UseGuards(LocalOnlyGuard)
   @UseInterceptors(FileInterceptor("file", {}))
@@ -52,7 +42,8 @@ export class PostsController {
     const title = safeParse<string>(createPostDto.title);
     const abstract = safeParse<string>(createPostDto.abstract);
     const imagesPath = safeParse<string>(createPostDto.imagesPath);
-    const authorsIds = safeParse<string[]>(createPostDto.authorsIds);
+    const authorsIds = createPostDto.authorsIds;
+    const tags = createPostDto.tags
 
     const { updatedContent, images } = this.postsService.extractFromMd(
       content,
@@ -66,7 +57,18 @@ export class PostsController {
       authorsIds,
       updatedContent,
       images,
+      tags
     );
+  }
+
+  @Get()
+  findAll() {
+    return this.postsService.findAll();
+  }
+
+  @Get(":id")
+  findOne(@Param("id") id: string) {
+    return this.postsService.findOne(+id);
   }
 
   @Patch(":id")
@@ -81,7 +83,7 @@ export class PostsController {
     const title = safeParse<string>(updatePostDto.title);
     const abstract = safeParse<string>(updatePostDto.abstract);
     const imagesPath = safeParse<string>(updatePostDto.imagesPath);
-    const authorsIds = safeParse<string[]>(updatePostDto.authorsIds);
+    const authorsIds = safeParse<string[]>(updatePostDto.authorsIds.join(", "));
 
     if (file) {
       this.validateFile(file);
