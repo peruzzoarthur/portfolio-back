@@ -16,7 +16,6 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { PostsService } from "./posts.service";
 import { CreatePostDto } from "./dto/create-post.dto";
-import { safeParse } from "src/utils/safe-parse";
 import { UpdatePostDto } from "./dto/update-post.dto";
 import { LocalOnlyGuard } from "src/guards/local-only.guard";
 
@@ -38,27 +37,28 @@ export class PostsController {
     this.validateFile(file);
 
     const content = file.buffer.toString("utf-8");
-    const seriesId = safeParse<string>(createPostDto.seriesId);
-    const title = safeParse<string>(createPostDto.title);
-    const abstract = safeParse<string>(createPostDto.abstract);
-    const imagesPath = safeParse<string>(createPostDto.imagesPath);
+    const seriesId = createPostDto.seriesId;
+    const title = createPostDto.title;
+    const abstract = createPostDto.abstract;
+    const imagesPath = createPostDto.imagesPath;
     const authorsIds = createPostDto.authorsIds;
-    const tags = createPostDto.tags
+    const tags = createPostDto.tags;
 
     const { updatedContent, images } = this.postsService.extractFromMd(
       content,
       imagesPath,
     );
 
-    return this.postsService.create(
-      Number(seriesId),
-      title,
-      abstract,
-      authorsIds,
-      updatedContent,
-      images,
-      tags
-    );
+    return this.postsService.create({
+      seriesId: seriesId,
+      title: title,
+      abstract: abstract,
+      authorsIds: authorsIds,
+      content: updatedContent,
+      images: images,
+      tags: tags,
+      imagesPath: imagesPath,
+    });
   }
 
   @Get()
@@ -79,11 +79,12 @@ export class PostsController {
     @Body() updatePostDto: UpdatePostDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const seriesId = safeParse<string>(updatePostDto.seriesId);
-    const title = safeParse<string>(updatePostDto.title);
-    const abstract = safeParse<string>(updatePostDto.abstract);
-    const imagesPath = safeParse<string>(updatePostDto.imagesPath);
-    const authorsIds = safeParse<string[]>(updatePostDto.authorsIds.join(", "));
+    const seriesId = updatePostDto.seriesId;
+    const title = updatePostDto.title;
+    const abstract = updatePostDto.abstract;
+    const imagesPath = updatePostDto.imagesPath;
+    const authorsIds = updatePostDto.authorsIds;
+    const tags = updatePostDto.tags;
 
     if (file) {
       this.validateFile(file);
@@ -98,22 +99,32 @@ export class PostsController {
       // Update post with content and images
       return this.postsService.update(
         +id,
-        seriesId ? Number(seriesId) : undefined,
-        title,
-        abstract,
-        authorsIds,
-        updatedContent,
-        images,
+        {
+          seriesId: seriesId,
+          imagesPath: imagesPath,
+          authorsIds: authorsIds,
+          abstract: abstract, 
+          images: images,
+          content: updatedContent,
+          title: title,
+          tags: tags
+        }
       );
     }
 
     // Update post without file
     return this.postsService.update(
       +id,
-      seriesId ? Number(seriesId) : undefined,
-      title,
-      abstract,
-      authorsIds,
+        {
+          seriesId: seriesId,
+          imagesPath: imagesPath,
+          authorsIds: authorsIds,
+          abstract: abstract, 
+          images: undefined,
+          content: undefined,
+          title: title,
+          tags: tags
+        }
     );
   }
 

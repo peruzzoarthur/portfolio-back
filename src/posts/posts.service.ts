@@ -3,9 +3,14 @@ import { PrismaService } from "src/prisma.service";
 import * as path from "path";
 import { existsSync, readFileSync } from "fs";
 import { ImagesService } from "src/images/images.service";
-import { Tag } from "@prisma/client";
 import { SeriesService } from "src/series/series.service";
 import { AuthorsService } from "src/authors/authors.service";
+import { CreatePostDto } from "./dto/create-post.dto";
+
+interface CreatePostDtoWithContentAndImages extends CreatePostDto {
+  content: string;
+  images: { filename: string; data: Buffer }[];
+}
 
 @Injectable()
 export class PostsService {
@@ -16,16 +21,16 @@ export class PostsService {
     private authorsService: AuthorsService,
   ) {}
 
-  async create(
-    seriesId: number,
-    title: string,
-    abstract: string,
-    authorsIds: string[],
-    content: string,
-    images: { filename: string; data: Buffer }[],
-    tags: Tag[],
-  ) {
-    const series = await this.seriesService.findOne(seriesId);
+  async create({
+    seriesId,
+    authorsIds,
+    tags,
+    title,
+    images,
+    content,
+    abstract,
+  }: CreatePostDtoWithContentAndImages) {
+    const series = await this.seriesService.findOne(Number(seriesId));
     if (!series) {
       throw new HttpException(
         `No series found with ${this.seriesService}`,
@@ -36,7 +41,8 @@ export class PostsService {
     if (authorsIds && authorsIds.length > 0) {
       const authorsIdsToNumber = authorsIds.map((id) => Number(id));
 
-      const authors = await this.authorsService.findAuthorsByIds(authorsIdsToNumber)
+      const authors =
+        await this.authorsService.findAuthorsByIds(authorsIdsToNumber);
 
       const existingAuthorIds = authors.map((author) => author.id);
       const invalidAuthors = authorsIdsToNumber.filter(
@@ -54,7 +60,7 @@ export class PostsService {
     const post = await this.prisma.post.create({
       data: {
         series: {
-          connect: { id: seriesId },
+          connect: { id: Number(seriesId) },
         },
         title,
         abstract,
@@ -131,15 +137,18 @@ export class PostsService {
 
   async update(
     id: number,
-    seriesId?: number,
-    title?: string,
-    abstract?: string,
-    authorsIds?: string[],
-    content?: string,
-    images?: { filename: string; data: Buffer }[],
+    {
+      seriesId,
+      tags,
+      title,
+      images,
+      content,
+      abstract,
+      authorsIds,
+    }: Partial<CreatePostDtoWithContentAndImages>,
   ) {
     if (seriesId) {
-      const series = await this.seriesService.findOne(seriesId) 
+      const series = await this.seriesService.findOne(Number(seriesId));
 
       if (!series) {
         throw new HttpException(
@@ -198,7 +207,7 @@ export class PostsService {
       },
       data: {
         series: {
-          connect: { id: seriesId ? seriesId : post.seriesId },
+          connect: { id: seriesId ? Number(seriesId) : post.seriesId },
         },
         title: title,
         abstract: abstract,
@@ -208,6 +217,7 @@ export class PostsService {
             ? authorsIds.map((id) => ({ id: Number(id) }))
             : post.authors.map((author) => ({ id: author.id })),
         },
+        tags: Array.from(new Set(tags)),
       },
     });
 
