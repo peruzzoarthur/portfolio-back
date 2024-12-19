@@ -19,6 +19,13 @@ export class AuthorsService {
     return await this.prisma.author.findMany();
   }
 
+  
+  async findAuthorsByIds(authorIds: number[]) {
+    return this.prisma.author.findMany({
+      where: { id: { in: authorIds } },
+    });
+  }
+
   async findOne(id: number) {
     const author = await this.prisma.author.findUnique({
       where: {

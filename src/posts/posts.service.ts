@@ -4,12 +4,16 @@ import * as path from "path";
 import { existsSync, readFileSync } from "fs";
 import { ImagesService } from "src/images/images.service";
 import { Tag } from "@prisma/client";
+import { SeriesService } from "src/series/series.service";
+import { AuthorsService } from "src/authors/authors.service";
 
 @Injectable()
 export class PostsService {
   constructor(
     private prisma: PrismaService,
     private imagesService: ImagesService,
+    private seriesService: SeriesService,
+    private authorsService: AuthorsService,
   ) {}
 
   async create(
@@ -19,8 +23,34 @@ export class PostsService {
     authorsIds: string[],
     content: string,
     images: { filename: string; data: Buffer }[],
-    tags: Tag[]
+    tags: Tag[],
   ) {
+    const series = await this.seriesService.findOne(seriesId);
+    if (!series) {
+      throw new HttpException(
+        `No series found with ${this.seriesService}`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    if (authorsIds && authorsIds.length > 0) {
+      const authorsIdsToNumber = authorsIds.map((id) => Number(id));
+
+      const authors = await this.authorsService.findAuthorsByIds(authorsIdsToNumber)
+
+      const existingAuthorIds = authors.map((author) => author.id);
+      const invalidAuthors = authorsIdsToNumber.filter(
+        (id) => !existingAuthorIds.includes(id),
+      );
+
+      if (invalidAuthors.length > 0) {
+        throw new HttpException(
+          `No authors found with ids: ${invalidAuthors.join(", ")}.`,
+          HttpStatus.NOT_FOUND,
+        );
+      }
+    }
+
     const post = await this.prisma.post.create({
       data: {
         series: {
@@ -32,7 +62,7 @@ export class PostsService {
         authors: {
           connect: authorsIds.map((id) => ({ id: Number(id) })),
         },
-        tags: tags
+        tags: Array.from(new Set(tags)),
       },
     });
 
@@ -90,9 +120,8 @@ export class PostsService {
             id: true,
           },
         },
-        tags: true
+        tags: true,
       },
-    
     });
     if (!post) {
       throw new HttpException("Post not found.", HttpStatus.NOT_FOUND);
@@ -110,11 +139,9 @@ export class PostsService {
     images?: { filename: string; data: Buffer }[],
   ) {
     if (seriesId) {
-      const isSeries = await this.prisma.series.findUnique({
-        where: { id: seriesId },
-      });
+      const series = await this.seriesService.findOne(seriesId) 
 
-      if (!isSeries) {
+      if (!series) {
         throw new HttpException(
           `No series with id ${id}.`,
           HttpStatus.NOT_FOUND,
@@ -219,36 +246,36 @@ export class PostsService {
   extractFromMd(content: string, basePath: string) {
     // Array to store extracted image information
     const images: { filename: string; data: Buffer }[] = [];
-    
+
     // Use regex to find and process Markdown image references
     const updatedContent = content.replace(
       /!\[.*?\]\((.*?)\)/g,
       (match, imagePath: string) => {
         // Resolve the full path of the image relative to the base path
         const fullPath = path.resolve(basePath, imagePath);
-        
+
         // Check if the image file exists
         if (existsSync(fullPath)) {
           // Read the image file into a buffer
           const imageBuffer = readFileSync(fullPath);
-          
+
           // Extract the filename from the image path
           const filename = path.basename(imagePath);
-          
+
           // Add image info to the images array
           images.push({ filename, data: imageBuffer });
-          
+
           // Update the image path in the Markdown content
           // Replace original path with a standardized 'images/' path
           return match.replace(imagePath, `images/${filename}`);
         }
-        
+
         // If file doesn't exist, return the original match
         return match;
       },
     );
-    
+
     // Return the modified content and extracted images
     return { updatedContent, images };
-}
+  }
 }
