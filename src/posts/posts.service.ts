@@ -97,7 +97,8 @@ export class PostsService { constructor(
           },
         },
         content: true,
-        updatedAt: true
+        updatedAt: true,
+        tags: true
       },
     });
   }

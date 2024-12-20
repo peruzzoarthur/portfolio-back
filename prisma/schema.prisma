@@ -37,10 +37,11 @@ model Post {
 
 model Image {
   id       Int    @id @default(autoincrement())
-  filename String @unique()
+  filename String 
   data     Bytes
   postId   Int
   post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+  @@unique([postId, filename])
 }
 
 enum Tag {

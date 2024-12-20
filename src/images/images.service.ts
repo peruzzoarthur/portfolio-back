@@ -3,7 +3,7 @@ import { PrismaService } from "src/prisma.service";
 
 @Injectable()
 export class ImagesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   async createImages(
     images: { filename: string; data: Buffer }[],
@@ -13,7 +13,7 @@ export class ImagesService {
       images.map((image) => {
         return this.prisma.image.create({
           data: {
-            filename: `${postId}_${image.filename}`,
+            filename: image.filename,
             data: image.data,
             postId: postId,
           },
@@ -23,9 +23,15 @@ export class ImagesService {
     return created;
   }
 
-  async getImageByFilenameAndArticleId(postId: number, filename: string) {
+  async getImageByFilenameAndPostId(postId: number, filename: string) {
     const image = await this.prisma.image.findUnique({
-      where: { filename: filename, postId: postId },
+      where: {
+        postId_filename: {
+          // Using the compound unique key
+          postId: postId,
+          filename: filename,
+        },
+      },
     });
 
     if (!image) {

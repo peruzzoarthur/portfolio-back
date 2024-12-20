@@ -12,7 +12,7 @@ export class ImagesController {
     @Param("filename") filename: string,
     @Res() res: Response,
   ) {
-    const image = await this.imagesService.getImageByFilenameAndArticleId(
+    const image = await this.imagesService.getImageByFilenameAndPostId(
       Number(articleId),
       filename,
     );
