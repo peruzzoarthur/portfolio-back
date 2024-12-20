@@ -56,4 +56,5 @@ enum Tag {
   TERRAFORM
   TEST
   TYPEORM
+  TYPESCRIPT
 }
