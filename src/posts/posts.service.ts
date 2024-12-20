@@ -7,14 +7,13 @@ import { SeriesService } from "src/series/series.service";
 import { AuthorsService } from "src/authors/authors.service";
 import { CreatePostDto } from "./dto/create-post.dto";
 
-interface CreatePostDtoWithContentAndImages extends CreatePostDto {
+export interface CreatePostDtoWithContentAndImages extends CreatePostDto {
   content: string;
   images: { filename: string; data: Buffer }[];
 }
 
 @Injectable()
-export class PostsService {
-  constructor(
+export class PostsService { constructor(
     private prisma: PrismaService,
     private imagesService: ImagesService,
     private seriesService: SeriesService,
@@ -98,6 +97,7 @@ export class PostsService {
           },
         },
         content: true,
+        updatedAt: true
       },
     });
   }
