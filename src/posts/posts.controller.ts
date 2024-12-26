@@ -66,10 +66,16 @@ export class PostsController {
     return this.postsService.findAll();
   }
 
+  @Get("used-tags")
+  findUsedTags() {
+    return this.postsService.findUsedTags()
+  }
+
   @Get(":id")
   findOne(@Param("id") id: string) {
     return this.postsService.findOne(+id);
   }
+
 
   @Patch(":id")
   @UseGuards(LocalOnlyGuard)

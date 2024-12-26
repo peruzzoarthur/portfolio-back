@@ -13,12 +13,13 @@ export interface CreatePostDtoWithContentAndImages extends CreatePostDto {
 }
 
 @Injectable()
-export class PostsService { constructor(
+export class PostsService {
+  constructor(
     private prisma: PrismaService,
     private imagesService: ImagesService,
     private seriesService: SeriesService,
     private authorsService: AuthorsService,
-  ) {}
+  ) { }
 
   async create({
     seriesId,
@@ -98,7 +99,7 @@ export class PostsService { constructor(
         },
         content: true,
         updatedAt: true,
-        tags: true
+        tags: true,
       },
     });
   }
@@ -252,6 +253,15 @@ export class PostsService { constructor(
         id: id,
       },
     });
+  }
+
+  async findUsedTags() {
+    const posts = await this.prisma.post.findMany({
+      select: {
+        tags: true,
+      },
+    });
+    return Array.from(new Set(posts.flatMap((p) => p.tags)));
   }
 
   extractFromMd(content: string, basePath: string) {
