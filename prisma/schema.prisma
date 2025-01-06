@@ -2,16 +2,23 @@ generator client {
   provider = "prisma-client-js"
 }
 
+generator dbml {
+  provider   = "prisma-dbml-generator"
+  output     = "./dbml"
+  outputName = "blog-schema.dbml"
+}
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
 model Author {
-  id        Int    @id @default(autoincrement())
-  firstName String
-  lastName  String
-  articles  Post[]
+  id         Int    @id @default(autoincrement())
+  firstName  String
+  lastName   String
+  articles   Post[]
+  pictureUrl String?
 }
 
 model Series {
@@ -23,7 +30,7 @@ model Series {
 model Post {
   id          Int      @id @default(autoincrement())
   authors     Author[]
-  title       String
+  title       String   @unique()
   abstract    String
   content     String
   images      Image[]
@@ -37,10 +44,11 @@ model Post {
 
 model Image {
   id       Int    @id @default(autoincrement())
-  filename String 
+  filename String
   data     Bytes
   postId   Int
   post     Post   @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   @@unique([postId, filename])
 }
 

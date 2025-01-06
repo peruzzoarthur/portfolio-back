@@ -1,0 +1,67 @@
+//// ------------------------------------------------------
+//// THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+//// ------------------------------------------------------
+
+Table Author {
+  id Int [pk, increment]
+  firstName String [not null]
+  lastName String [not null]
+  articles Post [not null]
+}
+
+Table Series {
+  id Int [pk, increment]
+  title String [unique, not null]
+  posts Post [not null]
+}
+
+Table Post {
+  id Int [pk, increment]
+  authors Author [not null]
+  title String [not null]
+  abstract String [not null]
+  content String [not null]
+  images Image [not null]
+  publishedAt DateTime [default: `now()`, not null]
+  createdAt DateTime [default: `now()`, not null]
+  updatedAt DateTime [not null]
+  tags Tag[] [not null]
+  seriesId Int [not null]
+  series Series [not null]
+}
+
+Table Image {
+  id Int [pk, increment]
+  filename String [not null]
+  data Bytes [not null]
+  postId Int [not null]
+  post Post [not null]
+
+  indexes {
+    (postId, filename) [unique]
+  }
+}
+
+Table AuthorToPost {
+  articlesId Int [ref: > Post.id]
+  authorsId Int [ref: > Author.id]
+}
+
+Enum Tag {
+  AWS
+  GIS
+  IAC
+  NEST
+  POSTGRES
+  PRISMA
+  PYTHON
+  REACT
+  TERRAFORM
+  TEST
+  TYPEORM
+  TYPESCRIPT
+}
+
+Ref: Post.seriesId > Series.id
+
+Ref: Image.postId > Post.id [delete: Cascade]
