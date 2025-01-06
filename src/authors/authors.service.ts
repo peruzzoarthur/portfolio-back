@@ -11,6 +11,7 @@ export class AuthorsService {
       data: {
         firstName: createAuthorDto.firstName,
         lastName: createAuthorDto.lastName,
+        pictureUrl: createAuthorDto.pictureUrl
       },
     });
   }

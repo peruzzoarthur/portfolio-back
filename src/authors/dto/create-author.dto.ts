@@ -6,4 +6,7 @@ export class CreateAuthorDto {
 
   @IsString()
   lastName: string
+
+  @IsString()
+  pictureUrl: string
 }

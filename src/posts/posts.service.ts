@@ -95,6 +95,7 @@ export class PostsService {
             id: true,
             firstName: true,
             lastName: true,
+            pictureUrl: true
           },
         },
         content: true,
