@@ -18,7 +18,7 @@ model Author {
   firstName  String
   lastName   String
   articles   Post[]
-  pictureUrl String?
+  pictureUrl String
 }
 
 model Series {

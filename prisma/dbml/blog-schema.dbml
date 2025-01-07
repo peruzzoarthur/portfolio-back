@@ -7,7 +7,7 @@ Table Author {
   firstName String [not null]
   lastName String [not null]
   articles Post [not null]
-  pictureUrl String
+  pictureUrl String [not null]
 }
 
 Table Series {
