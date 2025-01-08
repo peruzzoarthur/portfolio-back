@@ -6,28 +6,28 @@ export class CreatePostDto {
   @ApiProperty({ type: 'string', format: 'binary' })
   file: any;
 
-  @ApiProperty()
+  @ApiProperty({ example: "1" })
   @IsNumberString()
   seriesId: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "My first post" })
   @IsString()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "Random thoughts" })
   @IsString()
   abstract: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: "/usr/photos/" })
   @IsString()
   imagesPath: string;
 
-  @ApiProperty()
+  @ApiProperty({ example: ["1"] })
   @IsArray()
   @IsString({ each: true })
   authorsIds: string[];
 
-  @ApiProperty({ enum: Tag })
+  @ApiProperty({ example: ["NEST", "PRISMA"], enum: [Object.keys(Tag)] })
   @IsArray()
   @IsEnum(Tag, { each: true })
   tags: Tag[];

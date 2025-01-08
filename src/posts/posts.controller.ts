@@ -18,12 +18,14 @@ import { PostsService } from "./posts.service";
 import { CreatePostDto } from "./dto/create-post.dto";
 import { UpdatePostDto } from "./dto/update-post.dto";
 import { LocalOnlyGuard } from "src/guards/local-only.guard";
+import { ApiBody, ApiResponse, } from "@nestjs/swagger";
 
 @Controller("posts")
 export class PostsController {
-  constructor(private readonly postsService: PostsService) {}
+  constructor(private readonly postsService: PostsService) { }
 
   @Post()
+  @ApiResponse({ status: 400, description: 'Bad Request.' })
   @UseGuards(LocalOnlyGuard)
   @UseInterceptors(FileInterceptor("file", {}))
   async create(
@@ -80,6 +82,7 @@ export class PostsController {
   @Patch(":id")
   @UseGuards(LocalOnlyGuard)
   @UseInterceptors(FileInterceptor("file", {}))
+  @ApiBody({ type: UpdatePostDto })
   update(
     @Param("id") id: string,
     @Body() updatePostDto: UpdatePostDto,
@@ -109,7 +112,7 @@ export class PostsController {
           seriesId: seriesId,
           imagesPath: imagesPath,
           authorsIds: authorsIds,
-          abstract: abstract, 
+          abstract: abstract,
           images: images,
           content: updatedContent,
           title: title,
@@ -121,16 +124,16 @@ export class PostsController {
     // Update post without file
     return this.postsService.update(
       +id,
-        {
-          seriesId: seriesId,
-          imagesPath: imagesPath,
-          authorsIds: authorsIds,
-          abstract: abstract, 
-          images: undefined,
-          content: undefined,
-          title: title,
-          tags: tags
-        }
+      {
+        seriesId: seriesId,
+        imagesPath: imagesPath,
+        authorsIds: authorsIds,
+        abstract: abstract,
+        images: undefined,
+        content: undefined,
+        title: title,
+        tags: tags
+      }
     );
   }
 
