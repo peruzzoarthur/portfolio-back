@@ -5,12 +5,8 @@ import { existsSync, readFileSync } from "fs";
 import { ImagesService } from "src/images/images.service";
 import { SeriesService } from "src/series/series.service";
 import { AuthorsService } from "src/authors/authors.service";
-import { CreatePostDto } from "./dto/create-post.dto";
+import { CreatePostDtoWithContentAndImages } from "./dto/create-post-with-content-and-images.dto";
 
-export interface CreatePostDtoWithContentAndImages extends CreatePostDto {
-  content: string;
-  images: { filename: string; data: Buffer }[];
-}
 
 @Injectable()
 export class PostsService {

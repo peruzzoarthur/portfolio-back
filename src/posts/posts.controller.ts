@@ -50,7 +50,6 @@ export class PostsController {
     );
 
     return this.postsService.create({
-      file: file,
       seriesId: seriesId,
       title: title,
       abstract: abstract,
