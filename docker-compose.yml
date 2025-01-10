@@ -16,7 +16,7 @@ services:
 
 networks:
   server_my_custom_network:
-    external: true
+    driver: bridge 
 
 volumes:
   postgres_data:
