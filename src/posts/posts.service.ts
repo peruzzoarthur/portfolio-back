@@ -6,6 +6,7 @@ import { ImagesService } from "src/images/images.service";
 import { SeriesService } from "src/series/series.service";
 import { AuthorsService } from "src/authors/authors.service";
 import { CreatePostDtoWithContentAndImages } from "./dto/create-post-with-content-and-images.dto";
+import { Tag } from "@prisma/client";
 
 
 @Injectable()
@@ -34,8 +35,9 @@ export class PostsService {
       );
     }
 
-    if (authorsIds && authorsIds.length > 0) {
-      const authorsIdsToNumber = authorsIds.map((id) => Number(id));
+    const authorsIdsArray = authorsIds.split(',').map(item => item.trim());
+    if (authorsIdsArray && authorsIds.length > 0) {
+      const authorsIdsToNumber = authorsIdsArray.map((id) => Number(id));
 
       const authors =
         await this.authorsService.findAuthorsByIds(authorsIdsToNumber);
@@ -62,9 +64,9 @@ export class PostsService {
         abstract,
         content,
         authors: {
-          connect: authorsIds.map((id) => ({ id: Number(id) })),
+          connect: authorsIdsArray.map((id) => ({ id: Number(id) })),
         },
-        tags: Array.from(new Set(tags)),
+        tags: tags.split(",").map(item => item.trim()).map((item) => Tag[item]).filter((tag) => !!tag),
       },
     });
 
@@ -157,8 +159,9 @@ export class PostsService {
       }
     }
 
-    if (authorsIds && authorsIds.length > 0) {
-      const authorsIdsToNumber = authorsIds.map((id) => Number(id));
+    const authorsIdsArray = authorsIds.split(",").map((item) => item.trim())
+    if (authorsIdsArray && authorsIds.length > 0) {
+      const authorsIdsToNumber = authorsIdsArray.map((id) => Number(id));
       const authors = await this.prisma.author.findMany({
         where: { id: { in: authorsIdsToNumber } },
       });
@@ -213,16 +216,17 @@ export class PostsService {
         content: content,
         authors: {
           connect: authorsIds
-            ? authorsIds.map((id) => ({ id: Number(id) }))
+            ? authorsIdsArray.map((id) => ({ id: Number(id) }))
             : post.authors.map((author) => ({ id: author.id })),
         },
-        tags: Array.from(new Set(tags)),
+        tags: tags.split(",").map(item => item.trim()).map((item) => Tag[item]).filter((tag) => !tag),
+        // tags: Array.from(new Set(tags.split(',').map((item) => item.trim()))),
       },
     });
 
     if (!updatedPost) {
       throw new HttpException(
-        "Failed to create post",
+        "Failed to update post",
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

@@ -18,14 +18,34 @@ import { PostsService } from "./posts.service";
 import { CreatePostDto } from "./dto/create-post.dto";
 import { UpdatePostDto } from "./dto/update-post.dto";
 import { LocalOnlyGuard } from "src/guards/local-only.guard";
-import { ApiBody, ApiResponse, } from "@nestjs/swagger";
+import { ApiBody, ApiResponse, ApiConsumes } from "@nestjs/swagger";
+import { Tag } from "@prisma/client";
 
 @Controller("posts")
 export class PostsController {
   constructor(private readonly postsService: PostsService) { }
 
   @Post()
-  @ApiResponse({ status: 400, description: 'Bad Request.' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({
+    status: 400, description: 'Bad requests.', examples: {
+      ["No md"]: {
+        value: {
+          "message": "Markdown file is required.",
+          "error": "Bad Request",
+          "statusCode": 400
+        }, summary: "No MD file"
+      },
+      ["Bad tag"]: {
+        value: {
+          "statusCode": 400,
+          "message": "Tag PHP does not exist."
+        },
+        summary: "Bad tag"
+      }
+    }
+  })
+  @ApiResponse({ status: 404, description: 'No authors found with ids: x, y.' })
   @UseGuards(LocalOnlyGuard)
   @UseInterceptors(FileInterceptor("file", {}))
   async create(
@@ -45,6 +65,15 @@ export class PostsController {
     const imagesPath = createPostDto.imagesPath;
     const authorsIds = createPostDto.authorsIds;
     const tags = createPostDto.tags;
+
+    const tagElements = tags.split(',').map((item) => item.trim())
+
+
+    for (const tag of tagElements) {
+      if (!Tag[tag]) {
+        throw new HttpException(`Tag ${tag} does not exist.`, HttpStatus.BAD_REQUEST)
+      }
+    }
 
     const { updatedContent, images } = this.postsService.extractFromMd(
       content,
@@ -80,6 +109,7 @@ export class PostsController {
 
 
   @Patch(":id")
+  @ApiConsumes('multipart/form-data')
   @UseGuards(LocalOnlyGuard)
   @UseInterceptors(FileInterceptor("file", {}))
   @ApiBody({ type: UpdatePostDto })

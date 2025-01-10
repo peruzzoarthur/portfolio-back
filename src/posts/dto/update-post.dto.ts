@@ -1,7 +1,7 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { CreatePostDto } from './create-post.dto';
-import { Tag } from '@prisma/client';
+import { IsString } from 'class-validator';
 
 export class UpdatePostDto extends PartialType(CreatePostDto) {
   @ApiPropertyOptional({ type: 'string', format: 'binary' })
@@ -20,9 +20,10 @@ export class UpdatePostDto extends PartialType(CreatePostDto) {
   imagesPath?: string;
 
   @ApiPropertyOptional({ example: ['1'] })
-  authorsIds?: string[];
+  authorsIds?: string;
 
-  @ApiPropertyOptional({ example: ['NEST', 'PRISMA'], enum: [Object.keys(Tag)] })
-  tags?: Tag[];
+  @ApiPropertyOptional({ description: "String list of tags used by Enum Tag (AWS,GIS,IAC,NEST,POSTGRES,PRISMA,PYTHON,REACT,TERRAFORM,TEST,TYPEORM,TYPESCRIPT)", example: 'NEST, AWS'  } )
+  @IsString({ each: true })
+  tags?: string;
 }
 

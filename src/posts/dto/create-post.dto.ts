@@ -1,10 +1,9 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { Tag } from "@prisma/client";
-import { IsArray, IsEnum, IsNumberString, IsString } from "class-validator";
+import { IsNumberString, IsString } from "class-validator";
 
 export class CreatePostDto {
   @ApiProperty({ type: 'string', format: 'binary' })
-  file: any;
+  file: Express.Multer.File
 
   @ApiProperty({ example: "1" })
   @IsNumberString()
@@ -22,13 +21,21 @@ export class CreatePostDto {
   @IsString()
   imagesPath: string;
 
-  @ApiProperty({ example: ["1"] })
-  @IsArray()
+  @ApiProperty({
+    type: String,
+    items: { type: 'string' },
+    example: '1, 2',
+    description: 'List of author IDs.',
+  })
   @IsString({ each: true })
-  authorsIds: string[];
+  authorsIds: string;
 
-  @ApiProperty({ example: ["NEST", "PRISMA"], enum: [Object.keys(Tag)] })
-  @IsArray()
-  @IsEnum(Tag, { each: true })
-  tags: Tag[];
+  @ApiProperty({ description: "String list of tags used by Enum Tag (AWS,GIS,IAC,NEST,POSTGRES,PRISMA,PYTHON,REACT,TERRAFORM,TEST,TYPEORM,TYPESCRIPT)", example: 'NEST, AWS'  } )
+  @IsString({ each: true })
+  tags: string;
+
+  // @ApiProperty({ description: "List of tags used by Enum Tag.", example: 'NEST, AWS', enum: Tag, isArray: true })
+  // @IsEnum(Tag, { each: true })
+  // @IsArray()
+  // tags: Tag[];
 }

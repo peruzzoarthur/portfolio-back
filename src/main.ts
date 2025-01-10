@@ -14,7 +14,7 @@ async function bootstrap() {
   const config = new DocumentBuilder()
     .setTitle("OzzuPortfolio")
     .setDescription("A server for handling my posts at my portfolio page.")
-    .setVersion("0.1")
+    .setVersion("1.0")
     .addTag("posts")
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
