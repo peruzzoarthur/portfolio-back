@@ -110,6 +110,7 @@ export class PostsService {
       },
       select: {
         id: true,
+        updatedAt: true,
         title: true,
         abstract: true,
         authors: {
@@ -117,6 +118,7 @@ export class PostsService {
             id: true,
             firstName: true,
             lastName: true,
+            pictureUrl: true
           },
         },
         content: true,
