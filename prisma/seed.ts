@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 async function rawSql() {
   try {
     const rawSql = fs.readFileSync(
-      "/home/ozzurep/coldLab/dump_test/railway_dump.sql",
+      "./railway_dump.sql",
       "utf8",
     );
 
