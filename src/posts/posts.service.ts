@@ -1,5 +1,4 @@
 import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { PrismaService } from "src/prisma.service";
 import * as path from "path";
 import { existsSync, readFileSync } from "fs";
 import { ImagesService } from "src/images/images.service";
@@ -7,6 +6,7 @@ import { SeriesService } from "src/series/series.service";
 import { AuthorsService } from "src/authors/authors.service";
 import { CreatePostDtoWithContentAndImages } from "./dto/create-post-with-content-and-images.dto";
 import { Tag } from "@prisma/client";
+import { PrismaService } from "src/prisma/prisma.service";
 
 
 @Injectable()
