@@ -5,7 +5,7 @@ import { ValidationPipe } from "@nestjs/common";
 import { PrismaClientExceptionFilter } from "./prisma-client-exception/prisma-client-exception.filter";
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {snapshot: true});
   app.useGlobalPipes(new ValidationPipe());
   app.enableCors();
 
@@ -13,7 +13,7 @@ async function bootstrap() {
   app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
   const config = new DocumentBuilder()
     .setTitle("OzzuPortfolio")
-    .setDescription("A server for handling my posts at my portfolio page.")
+    .setDescription("A server for handling blog posts at my portfolio page.")
     .setVersion("1.0")
     .addTag("posts")
     .build();

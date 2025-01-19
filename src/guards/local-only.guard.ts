@@ -6,7 +6,7 @@ export class LocalOnlyGuard implements CanActivate {
   constructor(private readonly configService: ConfigService) {}
 
   canActivate(): boolean {
-    const isLocal = this.configService.get<string>("IS_LOCAL") === "true";
+    const isLocal = this.configService.get<boolean>("IS_LOCAL") === true;
     return isLocal;
   }
 }

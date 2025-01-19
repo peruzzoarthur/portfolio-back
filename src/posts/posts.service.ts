@@ -1,21 +1,16 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import * as path from "path";
-import { existsSync, readFileSync } from "fs";
-import { ImagesService } from "src/images/images.service";
-import { SeriesService } from "src/series/series.service";
-import { AuthorsService } from "src/authors/authors.service";
-import { CreatePostDtoWithContentAndImages } from "./dto/create-post-with-content-and-images.dto";
-import { Tag } from "@prisma/client";
-import { PrismaService } from "src/prisma/prisma.service";
-
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import * as path from 'path';
+import { existsSync, readFileSync } from 'fs';
+import { ImagesService } from 'src/images/images.service';
+import { CreatePostDtoWithContentAndImages } from './dto/create-post-with-content-and-images.dto';
+import { Tag } from '@prisma/client';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     private prisma: PrismaService,
     private imagesService: ImagesService,
-    private seriesService: SeriesService,
-    private authorsService: AuthorsService,
   ) { }
 
   async create({
@@ -27,20 +22,20 @@ export class PostsService {
     content,
     abstract,
   }: CreatePostDtoWithContentAndImages) {
-    const series = await this.seriesService.findOne(Number(seriesId));
+    const series = await this.prisma.series.findUnique({where: {id: Number(seriesId)}});
     if (!series) {
       throw new HttpException(
-        `No series found with ${this.seriesService}`,
+        `No series found with ${seriesId}`,
         HttpStatus.NOT_FOUND,
       );
     }
 
-    const authorsIdsArray = authorsIds.split(',').map(item => item.trim());
+    const authorsIdsArray = authorsIds.split(',').map((item) => item.trim());
     if (authorsIdsArray && authorsIds.length > 0) {
       const authorsIdsToNumber = authorsIdsArray.map((id) => Number(id));
 
       const authors =
-        await this.authorsService.findAuthorsByIds(authorsIdsToNumber);
+        await this.findAuthorsByIds(authorsIdsToNumber);
 
       const existingAuthorIds = authors.map((author) => author.id);
       const invalidAuthors = authorsIdsToNumber.filter(
@@ -49,7 +44,7 @@ export class PostsService {
 
       if (invalidAuthors.length > 0) {
         throw new HttpException(
-          `No authors found with ids: ${invalidAuthors.join(", ")}.`,
+          `No authors found with ids: ${invalidAuthors.join(', ')}.`,
           HttpStatus.NOT_FOUND,
         );
       }
@@ -66,13 +61,17 @@ export class PostsService {
         authors: {
           connect: authorsIdsArray.map((id) => ({ id: Number(id) })),
         },
-        tags: tags.split(",").map(item => item.trim()).map((item) => Tag[item]).filter((tag) => !!tag),
+        tags: tags
+          .split(',')
+          .map((item) => item.trim())
+          .map((item) => Tag[item])
+          .filter((tag) => !!tag),
       },
     });
 
     if (!post) {
       throw new HttpException(
-        "Failed to create post",
+        'Failed to create post',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -93,7 +92,7 @@ export class PostsService {
             id: true,
             firstName: true,
             lastName: true,
-            pictureUrl: true
+            pictureUrl: true,
           },
         },
         content: true,
@@ -118,7 +117,7 @@ export class PostsService {
             id: true,
             firstName: true,
             lastName: true,
-            pictureUrl: true
+            pictureUrl: true,
           },
         },
         content: true,
@@ -133,7 +132,7 @@ export class PostsService {
       },
     });
     if (!post) {
-      throw new HttpException("Post not found.", HttpStatus.NOT_FOUND);
+      throw new HttpException('Post not found.', HttpStatus.NOT_FOUND);
     }
     return post;
   }
@@ -151,17 +150,16 @@ export class PostsService {
     }: Partial<CreatePostDtoWithContentAndImages>,
   ) {
     if (seriesId) {
-      const series = await this.seriesService.findOne(Number(seriesId));
-
+      const series = await this.prisma.series.findUnique({where: {id: Number(seriesId)}})
       if (!series) {
         throw new HttpException(
-          `No series with id ${id}.`,
+          `No series with id ${seriesId}.`,
           HttpStatus.NOT_FOUND,
         );
       }
     }
 
-    const authorsIdsArray = authorsIds.split(",").map((item) => item.trim())
+    const authorsIdsArray = authorsIds.split(',').map((item) => item.trim());
     if (authorsIdsArray && authorsIds.length > 0) {
       const authorsIdsToNumber = authorsIdsArray.map((id) => Number(id));
       const authors = await this.prisma.author.findMany({
@@ -175,7 +173,7 @@ export class PostsService {
 
       if (invalidAuthors.length > 0) {
         throw new HttpException(
-          `No authors found with ids: ${invalidAuthors.join(", ")}.`,
+          `No authors found with ids: ${invalidAuthors.join(', ')}.`,
           HttpStatus.NOT_FOUND,
         );
       }
@@ -202,7 +200,7 @@ export class PostsService {
     });
 
     if (!post) {
-      throw new HttpException("Post not found.", HttpStatus.NOT_FOUND);
+      throw new HttpException('Post not found.', HttpStatus.NOT_FOUND);
     }
 
     const updatedPost = await this.prisma.post.update({
@@ -221,14 +219,18 @@ export class PostsService {
             ? authorsIdsArray.map((id) => ({ id: Number(id) }))
             : post.authors.map((author) => ({ id: author.id })),
         },
-        tags: tags.split(",").map(item => item.trim()).map((item) => Tag[item]).filter((tag) => !tag),
+        tags: tags
+          .split(',')
+          .map((item) => item.trim())
+          .map((item) => Tag[item])
+          .filter((tag) => !tag),
         // tags: Array.from(new Set(tags.split(',').map((item) => item.trim()))),
       },
     });
 
     if (!updatedPost) {
       throw new HttpException(
-        "Failed to update post",
+        'Failed to update post',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
@@ -301,5 +303,11 @@ export class PostsService {
 
     // Return the modified content and extracted images
     return { updatedContent, images };
+  }
+
+  async findAuthorsByIds(authorIds: number[]) {
+    return this.prisma.author.findMany({
+      where: { id: { in: authorIds } },
+    });
   }
 }

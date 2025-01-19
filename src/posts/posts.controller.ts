@@ -12,53 +12,58 @@ import {
   HttpException,
   HttpStatus,
   UseGuards,
-} from "@nestjs/common";
-import { FileInterceptor } from "@nestjs/platform-express";
-import { PostsService } from "./posts.service";
-import { CreatePostDto } from "./dto/create-post.dto";
-import { UpdatePostDto } from "./dto/update-post.dto";
-import { LocalOnlyGuard } from "src/guards/local-only.guard";
-import { ApiBody, ApiResponse, ApiConsumes } from "@nestjs/swagger";
-import { Tag } from "@prisma/client";
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { PostsService } from './posts.service';
+import { CreatePostDto } from './dto/create-post.dto';
+import { UpdatePostDto } from './dto/update-post.dto';
+import { LocalOnlyGuard } from 'src/guards/local-only.guard';
+import { ApiBody, ApiResponse, ApiConsumes } from '@nestjs/swagger';
+import { Tag } from '@prisma/client';
+import { MarkdownFileInterceptor } from 'src/interceptors/markdown-file.interceptor';
 
-@Controller("posts")
+@Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) { }
 
   @Post()
   @ApiConsumes('multipart/form-data')
   @ApiResponse({
-    status: 400, description: 'Bad requests.', examples: {
-      ["No md"]: {
+    status: 400,
+    description: 'Bad requests.',
+    examples: {
+      ['No md']: {
         value: {
-          "message": "Markdown file is required.",
-          "error": "Bad Request",
-          "statusCode": 400
-        }, summary: "No MD file"
-      },
-      ["Bad tag"]: {
-        value: {
-          "statusCode": 400,
-          "message": "Tag PHP does not exist."
+          message: 'Markdown file is required.',
+          error: 'Bad Request',
+          statusCode: 400,
         },
-        summary: "Bad tag"
-      }
-    }
+        summary: 'No MD file',
+      },
+      ['Bad tag']: {
+        value: {
+          statusCode: 400,
+          message: 'Tag PHP does not exist.',
+        },
+        summary: 'Bad tag',
+      },
+    },
   })
   @ApiResponse({ status: 404, description: 'No authors found with ids: x, y.' })
   @UseGuards(LocalOnlyGuard)
-  @UseInterceptors(FileInterceptor("file", {}))
+  // @UseInterceptors(FileInterceptor("file", {}))
+  @UseInterceptors(new MarkdownFileInterceptor('file'))
   async create(
     @Body() createPostDto: CreatePostDto,
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
-      throw new BadRequestException("Markdown file is required.");
+      throw new BadRequestException('Markdown file is required.');
     }
 
     this.validateFile(file);
 
-    const content = file.buffer.toString("utf-8");
+    const content = file.buffer.toString('utf-8');
     const seriesId = createPostDto.seriesId;
     const title = createPostDto.title;
     const abstract = createPostDto.abstract;
@@ -66,12 +71,14 @@ export class PostsController {
     const authorsIds = createPostDto.authorsIds;
     const tags = createPostDto.tags;
 
-    const tagElements = tags.split(',').map((item) => item.trim())
-
+    const tagElements = tags.split(',').map((item) => item.trim());
 
     for (const tag of tagElements) {
       if (!Tag[tag]) {
-        throw new HttpException(`Tag ${tag} does not exist.`, HttpStatus.BAD_REQUEST)
+        throw new HttpException(
+          `Tag ${tag} does not exist.`,
+          HttpStatus.BAD_REQUEST,
+        );
       }
     }
 
@@ -97,24 +104,24 @@ export class PostsController {
     return this.postsService.findAll();
   }
 
-  @Get("used-tags")
+  @Get('used-tags')
   findUsedTags() {
-    return this.postsService.findUsedTags()
+    return this.postsService.findUsedTags();
   }
 
-  @Get(":id")
-  findOne(@Param("id") id: string) {
+  @Get(':id')
+  findOne(@Param('id') id: string) {
     return this.postsService.findOne(+id);
   }
 
-
-  @Patch(":id")
+  @Patch(':id')
   @ApiConsumes('multipart/form-data')
   @UseGuards(LocalOnlyGuard)
-  @UseInterceptors(FileInterceptor("file", {}))
+  // @UseInterceptors(FileInterceptor('file', {}))
+  @UseInterceptors(new MarkdownFileInterceptor('file'))
   @ApiBody({ type: UpdatePostDto })
   update(
-    @Param("id") id: string,
+    @Param('id') id: string,
     @Body() updatePostDto: UpdatePostDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
@@ -129,63 +136,57 @@ export class PostsController {
       this.validateFile(file);
 
       // Process file content and extract md with images ref
-      const content = file.buffer.toString("utf-8");
+      const content = file.buffer.toString('utf-8');
       const { updatedContent, images } = this.postsService.extractFromMd(
         content,
         imagesPath,
       );
 
       // Update post with content and images
-      return this.postsService.update(
-        +id,
-        {
-          seriesId: seriesId,
-          imagesPath: imagesPath,
-          authorsIds: authorsIds,
-          abstract: abstract,
-          images: images,
-          content: updatedContent,
-          title: title,
-          tags: tags
-        }
-      );
-    }
-
-    // Update post without file
-    return this.postsService.update(
-      +id,
-      {
+      return this.postsService.update(+id, {
         seriesId: seriesId,
         imagesPath: imagesPath,
         authorsIds: authorsIds,
         abstract: abstract,
-        images: undefined,
-        content: undefined,
+        images: images,
+        content: updatedContent,
         title: title,
-        tags: tags
-      }
-    );
+        tags: tags,
+      });
+    }
+
+    // Update post without file
+    return this.postsService.update(+id, {
+      seriesId: seriesId,
+      imagesPath: imagesPath,
+      authorsIds: authorsIds,
+      abstract: abstract,
+      images: undefined,
+      content: undefined,
+      title: title,
+      tags: tags,
+    });
   }
 
-  @Delete(":id")
+  @Delete(':id')
   @UseGuards(LocalOnlyGuard)
-  remove(@Param("id") id: string) {
+  remove(@Param('id') id: string) {
     return this.postsService.remove(+id);
   }
 
   private validateFile(file: Express.Multer.File) {
-    if (!file.mimetype.includes("markdown")) {
+    if (!file.mimetype.includes('markdown')) {
       throw new HttpException(
-        "Only .md files are allowed.",
+        'Only .md files are allowed.',
         HttpStatus.BAD_REQUEST,
       );
     }
 
-    const allowedExtensions = [".md"];
-    const fileExtension = file.originalname.split(".").pop();
+    const allowedExtensions = ['.md'];
+    const fileExtension = file.originalname.split('.').pop();
     if (!allowedExtensions.includes(`.${fileExtension}`)) {
       throw new HttpException(
-        "Only .md files are allowed.",
+        'Only .md files are allowed.',
         HttpStatus.BAD_REQUEST,
       );
     }
@@ -193,7 +194,7 @@ export class PostsController {
     const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
       throw new HttpException(
-        "File size exceeds the 5MB limit.",
+        'File size exceeds the 5MB limit.',
         HttpStatus.BAD_REQUEST,
       );
     }

@@ -27,7 +27,6 @@ export class ImagesService {
     const image = await this.prisma.image.findUnique({
       where: {
         postId_filename: {
-          // Using the compound unique key
           postId: postId,
           filename: filename,
         },

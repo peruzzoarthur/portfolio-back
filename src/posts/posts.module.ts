@@ -1,14 +1,12 @@
-import { Module } from "@nestjs/common";
-import { PostsService } from "./posts.service";
-import { PostsController } from "./posts.controller";
-import { ImagesModule } from "src/images/images.module";
-import { AuthorsModule } from "src/authors/authors.module";
-import { SeriesModule } from "src/series/series.module";
-import { PrismaModule } from "src/prisma/prisma.module";
+import { Module } from '@nestjs/common';
+import { PostsService } from './posts.service';
+import { PostsController } from './posts.controller';
+import { ImagesModule } from 'src/images/images.module';
+import { DatabaseModule } from 'src/database/database.module';
 
 @Module({
-  imports: [ImagesModule, AuthorsModule, SeriesModule, PrismaModule],
+  imports: [ImagesModule, DatabaseModule],
   controllers: [PostsController],
-  providers: [PostsService], 
+  providers: [PostsService],
 })
-export class PostsModule {}
+export class PostsModule { }
