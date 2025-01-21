@@ -5,12 +5,16 @@ import { ImagesService } from 'src/images/images.service';
 import { CreatePostDtoWithContentAndImages } from './dto/create-post-with-content-and-images.dto';
 import { Tag } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { SeriesService } from 'src/series/series.service';
+import { AuthorsService } from 'src/authors/authors.service';
 
 @Injectable()
 export class PostsService {
   constructor(
     private prisma: PrismaService,
     private imagesService: ImagesService,
+    private seriesService: SeriesService,
+    private authorsService: AuthorsService,
   ) { }
 
   async create({
@@ -22,7 +26,8 @@ export class PostsService {
     content,
     abstract,
   }: CreatePostDtoWithContentAndImages) {
-    const series = await this.prisma.series.findUnique({where: {id: Number(seriesId)}});
+    // const series = await this.prisma.series.findUnique({where: {id: Number(seriesId)}});
+    const series = this.seriesService.findOne(Number(seriesId));
     if (!series) {
       throw new HttpException(
         `No series found with ${seriesId}`,
@@ -35,7 +40,7 @@ export class PostsService {
       const authorsIdsToNumber = authorsIdsArray.map((id) => Number(id));
 
       const authors =
-        await this.findAuthorsByIds(authorsIdsToNumber);
+        await this.authorsService.findAuthorsByIds(authorsIdsToNumber);
 
       const existingAuthorIds = authors.map((author) => author.id);
       const invalidAuthors = authorsIdsToNumber.filter(
@@ -150,7 +155,7 @@ export class PostsService {
     }: Partial<CreatePostDtoWithContentAndImages>,
   ) {
     if (seriesId) {
-      const series = await this.prisma.series.findUnique({where: {id: Number(seriesId)}})
+      const series = this.seriesService.findOne(Number(seriesId));
       if (!series) {
         throw new HttpException(
           `No series with id ${seriesId}.`,
@@ -162,9 +167,9 @@ export class PostsService {
     const authorsIdsArray = authorsIds.split(',').map((item) => item.trim());
     if (authorsIdsArray && authorsIds.length > 0) {
       const authorsIdsToNumber = authorsIdsArray.map((id) => Number(id));
-      const authors = await this.prisma.author.findMany({
-        where: { id: { in: authorsIdsToNumber } },
-      });
+
+      const authors =
+        await this.authorsService.findAuthorsByIds(authorsIdsToNumber);
 
       const existingAuthorIds = authors.map((author) => author.id);
       const invalidAuthors = authorsIdsToNumber.filter(
@@ -303,11 +308,5 @@ export class PostsService {
 
     // Return the modified content and extracted images
     return { updatedContent, images };
-  }
-
-  async findAuthorsByIds(authorIds: number[]) {
-    return this.prisma.author.findMany({
-      where: { id: { in: authorIds } },
-    });
   }
 }

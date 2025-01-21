@@ -1,25 +1,29 @@
-import { HttpAdapterHost, NestFactory } from "@nestjs/core";
-import { SwaggerModule, DocumentBuilder } from "@nestjs/swagger";
-import { AppModule } from "./app.module";
-import { ValidationPipe } from "@nestjs/common";
-import { PrismaClientExceptionFilter } from "./prisma-client-exception/prisma-client-exception.filter";
+import { HttpAdapterHost, NestFactory } from '@nestjs/core';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import { PrismaClientExceptionFilter } from './prisma-client-exception/prisma-client-exception.filter';
+import { ConfigService } from '@nestjs/config';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule, {snapshot: true});
-  app.useGlobalPipes(new ValidationPipe());
+  const app = await NestFactory.create(AppModule, { snapshot: true });
   app.enableCors();
+  app.useGlobalPipes(new ValidationPipe());
 
   const { httpAdapter } = app.get(HttpAdapterHost);
   app.useGlobalFilters(new PrismaClientExceptionFilter(httpAdapter));
+
   const config = new DocumentBuilder()
-    .setTitle("OzzuPortfolio")
-    .setDescription("A server for handling blog posts at my portfolio page.")
-    .setVersion("1.0")
-    .addTag("posts")
+    .setTitle('OzzuPortfolio')
+    .setDescription('A server for handling blog posts at my portfolio page.')
+    .setVersion('1.0')
+    .addTag('posts')
     .build();
   const documentFactory = () => SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup("api", app, documentFactory);
 
-  await app.listen(process.env.PORT ?? 3000);
+  const configService = app.get(ConfigService);
+  SwaggerModule.setup('api', app, documentFactory);
+
+  await app.listen(configService.get<number>('PORT') ?? 3000);
 }
 bootstrap();

@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { AuthorsService } from './authors.service';
 import { AuthorsController } from './authors.controller';
-import { DatabaseModule } from 'src/database/database.module';
+import { CoreModule } from '../core/core.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [CoreModule],
   controllers: [AuthorsController],
   providers: [AuthorsService],
   exports: [AuthorsService],

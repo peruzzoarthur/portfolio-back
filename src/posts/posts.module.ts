@@ -1,11 +1,18 @@
 import { Module } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { PostsController } from './posts.controller';
-import { ImagesModule } from 'src/images/images.module';
-import { DatabaseModule } from 'src/database/database.module';
+import { ImagesModule } from '../images/images.module';
+import { SeriesModule } from '../series/series.module';
+import { AuthorsModule } from '../authors/authors.module';
+import { CoreModule } from '../core/core.module';
 
 @Module({
-  imports: [ImagesModule, DatabaseModule],
+  imports: [
+    CoreModule,
+    ImagesModule,
+    SeriesModule,
+    AuthorsModule,
+  ],
   controllers: [PostsController],
   providers: [PostsService],
 })
