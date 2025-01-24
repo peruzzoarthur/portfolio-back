@@ -1,20 +1,45 @@
-import { ApiProperty } from "@nestjs/swagger";
-import { IsString } from "class-validator";
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsEmail, IsJSON, IsOptional, IsString, IsUrl } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateAuthorDto {
-  @ApiProperty({ example: "Arthur" })
+  @ApiProperty({ example: 'Arthur' })
   @IsString()
-  firstName: string
+  firstName: string;
 
-  @ApiProperty({ example: "Peruzzo" })
+  @ApiProperty({ example: 'Peruzzo' })
   @IsString()
-  lastName: string
+  lastName: string;
 
-  @ApiProperty({ example: "https://avatars.githubusercontent.com/u/73316481?v=4" })
+  @ApiProperty({ example: 'peruzzoarthur@gmail.com' })
+  @IsEmail()
+  email: string;
+
+  @ApiPropertyOptional({
+    example: 'Full-stack developer passionate about TypeScript and NestJS',
+  })
   @IsString()
-  pictureUrl: string
+  @IsOptional()
+  bio?: string;
+
+  @ApiPropertyOptional({
+    example: 'https://avatars.githubusercontent.com/u/73316481?v=4',
+  })
+  @IsUrl()
+  @IsOptional()
+  pictureUrl?: string;
+
+  @ApiPropertyOptional({
+    example: {
+      github: 'https://github.com/peruzzoarthur',
+      linkedin: 'https://linkedin.com/in/peruzzoarthur',
+      twitter: 'https://twitter.com/peruzzoarthur',
+    },
+  })
+  @IsJSON()
+  @IsOptional()
+  @Transform(({ value }) => {
+    return typeof value === 'string' ? value : JSON.stringify(value);
+  })
+  socialLinks?: string;
 }
-
-
-
-

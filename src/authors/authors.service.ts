@@ -1,17 +1,27 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { CreateAuthorDto } from "./dto/create-author.dto";
-import { UpdateAuthorDto } from "./dto/update-author.dto";
-import { PrismaService } from "src/prisma/prisma.service";
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { CreateAuthorDto } from './dto/create-author.dto';
+import { UpdateAuthorDto } from './dto/update-author.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class AuthorsService {
   constructor(private prisma: PrismaService) { }
   async create(createAuthorDto: CreateAuthorDto) {
+    const checkAuthorEmail = await this.prisma.author.findUnique({
+      where: { email: createAuthorDto.email },
+    });
+    if (checkAuthorEmail) {
+      throw new HttpException(
+        'Email already registered for an author',
+        HttpStatus.CONFLICT,
+      );
+    }
     return await this.prisma.author.create({
       data: {
         firstName: createAuthorDto.firstName,
         lastName: createAuthorDto.lastName,
-        pictureUrl: createAuthorDto.pictureUrl
+        pictureUrl: createAuthorDto.pictureUrl,
+        email: createAuthorDto.email,
       },
     });
   }
@@ -20,7 +30,6 @@ export class AuthorsService {
     return await this.prisma.author.findMany();
   }
 
-  
   async findAuthorsByIds(authorIds: number[]) {
     return this.prisma.author.findMany({
       where: { id: { in: authorIds } },

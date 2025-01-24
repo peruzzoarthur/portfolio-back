@@ -1,21 +1,34 @@
-import { HttpException, HttpStatus, Injectable } from "@nestjs/common";
-import { CreateSeriesDto } from "./dto/create-series.dto";
-import { UpdateSeriesDto } from "./dto/update-series.dto";
-import { PrismaService } from "src/prisma/prisma.service";
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { CreateSeriesDto } from './dto/create-series.dto';
+import { UpdateSeriesDto } from './dto/update-series.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class SeriesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
   async create(createSeriesDto: CreateSeriesDto) {
-    const checkSeries = await this.prisma.series.findUnique({
+    const checkSeriesTitle = await this.prisma.series.findUnique({
       where: {
         title: createSeriesDto.title,
       },
     });
 
-    if (checkSeries) {
+    if (checkSeriesTitle) {
       throw new HttpException(
-        "Series with this title already exists.",
+        'Series with this title already exists.',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const checkSeriesSlug = await this.prisma.series.findUnique({
+      where: {
+        slug: createSeriesDto.slug,
+      },
+    });
+
+    if (checkSeriesSlug) {
+      throw new HttpException(
+        'Series with this slug already exists.',
         HttpStatus.CONFLICT,
       );
     }
@@ -23,6 +36,7 @@ export class SeriesService {
     return await this.prisma.series.create({
       data: {
         title: createSeriesDto.title,
+        slug: createSeriesDto.slug,
       },
     });
   }

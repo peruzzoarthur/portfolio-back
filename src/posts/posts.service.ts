@@ -7,6 +7,7 @@ import { Tag } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { SeriesService } from 'src/series/series.service';
 import { AuthorsService } from 'src/authors/authors.service';
+import { CreateImageDto } from 'src/images/dto/create-image.dto';
 
 @Injectable()
 export class PostsService {
@@ -15,7 +16,7 @@ export class PostsService {
     private imagesService: ImagesService,
     private seriesService: SeriesService,
     private authorsService: AuthorsService,
-  ) { }
+  ) {}
 
   async create({
     seriesId,
@@ -25,9 +26,36 @@ export class PostsService {
     images,
     content,
     abstract,
+    slug,
   }: CreatePostDtoWithContentAndImages) {
+
+    const checkPostTitle = await this.prisma.post.findUnique({
+      where: {
+        title: title,
+      },
+    });
+
+    if (checkPostTitle) {
+      throw new HttpException(
+        'Post with this title already exists.',
+        HttpStatus.CONFLICT,
+      );
+    }
+
+    const checkPostSlug = await this.prisma.post.findUnique({
+      where: {
+        slug: slug,
+      },
+    });
+
+    if (checkPostSlug) {
+      throw new HttpException(
+        'Post with this slug already exists.',
+        HttpStatus.CONFLICT,
+      );
+    }
     // const series = await this.prisma.series.findUnique({where: {id: Number(seriesId)}});
-    const series = this.seriesService.findOne(Number(seriesId));
+    const series = await this.seriesService.findOne(Number(seriesId));
     if (!series) {
       throw new HttpException(
         `No series found with ${seriesId}`,
@@ -66,6 +94,7 @@ export class PostsService {
         authors: {
           connect: authorsIdsArray.map((id) => ({ id: Number(id) })),
         },
+        slug: slug,
         tags: tags
           .split(',')
           .map((item) => item.trim())
@@ -276,8 +305,8 @@ export class PostsService {
 
   extractFromMd(content: string, basePath: string) {
     // Array to store extracted image information
-    const images: { filename: string; data: Buffer }[] = [];
-
+    // const images: { filename: string; data: Buffer }[] = [];
+    const images: CreateImageDto[] = [];
     // Use regex to find and process Markdown image references
     const updatedContent = content.replace(
       /!\[.*?\]\((.*?)\)/g,
@@ -294,7 +323,12 @@ export class PostsService {
           const filename = path.basename(imagePath);
 
           // Add image info to the images array
-          images.push({ filename, data: imageBuffer });
+          images.push({
+            filename,
+            data: imageBuffer,
+            mimeType: 'image/png',
+            size: 123132,
+          });
 
           // Update the image path in the Markdown content
           // Replace original path with a standardized 'images/' path

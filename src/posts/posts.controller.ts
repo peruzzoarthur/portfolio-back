@@ -12,8 +12,8 @@ import {
   HttpException,
   HttpStatus,
   UseGuards,
+  UseFilters,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
@@ -21,11 +21,12 @@ import { LocalOnlyGuard } from 'src/guards/local-only.guard';
 import { ApiBody, ApiResponse, ApiConsumes } from '@nestjs/swagger';
 import { Tag } from '@prisma/client';
 import { MarkdownFileInterceptor } from 'src/interceptors/markdown-file.interceptor';
+import { PrismaClientExceptionFilter } from 'src/prisma-client-exception/prisma-client-exception.filter';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) { }
-
+  @UseFilters(PrismaClientExceptionFilter)
   @Post()
   @ApiConsumes('multipart/form-data')
   @ApiResponse({
@@ -70,6 +71,7 @@ export class PostsController {
     const imagesPath = createPostDto.imagesPath;
     const authorsIds = createPostDto.authorsIds;
     const tags = createPostDto.tags;
+    const slug = createPostDto.slug
 
     const tagElements = tags.split(',').map((item) => item.trim());
 
@@ -96,6 +98,7 @@ export class PostsController {
       images: images,
       tags: tags,
       imagesPath: imagesPath,
+      slug: slug
     });
   }
 

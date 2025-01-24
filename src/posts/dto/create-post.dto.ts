@@ -21,6 +21,11 @@ export class CreatePostDto {
   @IsString()
   imagesPath: string;
 
+
+  @ApiProperty({ example: "dto-validation" })
+  @IsString()
+  slug: string;
+
   @ApiProperty({
     type: String,
     items: { type: 'string' },
