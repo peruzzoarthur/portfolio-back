@@ -16,7 +16,7 @@ export class PostsService {
     private imagesService: ImagesService,
     private seriesService: SeriesService,
     private authorsService: AuthorsService,
-  ) {}
+  ) { }
 
   async create({
     seriesId,
@@ -28,7 +28,6 @@ export class PostsService {
     abstract,
     slug,
   }: CreatePostDtoWithContentAndImages) {
-
     const checkPostTitle = await this.prisma.post.findUnique({
       where: {
         title: title,
@@ -83,6 +82,16 @@ export class PostsService {
       }
     }
 
+    const tagsArray = Array.from(
+      new Set(
+        tags
+          .split(',')
+          .map((item) => item.trim())
+          .map((item) => Tag[item])
+          .filter((tag) => !!tag),
+      ),
+    );
+
     const post = await this.prisma.post.create({
       data: {
         series: {
@@ -95,11 +104,12 @@ export class PostsService {
           connect: authorsIdsArray.map((id) => ({ id: Number(id) })),
         },
         slug: slug,
-        tags: tags
-          .split(',')
-          .map((item) => item.trim())
-          .map((item) => Tag[item])
-          .filter((tag) => !!tag),
+        tags: tagsArray,
+        // tags: tags
+        //   .split(',')
+        //   .map((item) => item.trim())
+        //   .map((item) => Tag[item])
+        //   .filter((tag) => !!tag),
       },
     });
 
@@ -183,18 +193,47 @@ export class PostsService {
       authorsIds,
     }: Partial<CreatePostDtoWithContentAndImages>,
   ) {
-    if (seriesId) {
-      const series = this.seriesService.findOne(Number(seriesId));
-      if (!series) {
-        throw new HttpException(
-          `No series with id ${seriesId}.`,
-          HttpStatus.NOT_FOUND,
-        );
-      }
+    const post = await this.prisma.post.findUnique({
+      where: {
+        id: id,
+      },
+      select: {
+        id: true,
+        seriesId: true,
+        authors: {
+          select: {
+            id: true,
+          },
+        },
+        images: {
+          select: {
+            id: true,
+          },
+        },
+        tags: true,
+      },
+    });
+
+    if (!post) {
+      throw new HttpException('Post not found.', HttpStatus.NOT_FOUND);
     }
 
-    const authorsIdsArray = authorsIds.split(',').map((item) => item.trim());
-    if (authorsIdsArray && authorsIds.length > 0) {
+    const series = seriesId
+      ? await this.seriesService.findOne(Number(seriesId))
+      : post.seriesId;
+
+    if (!series) {
+      throw new HttpException(
+        `No series with id ${seriesId}.`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+
+    const authorsIdsArray: string[] = authorsIds
+      ? authorsIds.split(',').map((item) => item.trim())
+      : post.authors.map((author) => author.id.toString());
+
+    if (authorsIdsArray && authorsIdsArray.length > 0) {
       const authorsIdsToNumber = authorsIdsArray.map((id) => Number(id));
 
       const authors =
@@ -213,29 +252,17 @@ export class PostsService {
       }
     }
 
-    const post = await this.prisma.post.findUnique({
-      where: {
-        id: id,
-      },
-      select: {
-        id: true,
-        seriesId: true,
-        authors: {
-          select: {
-            id: true,
-          },
-        },
-        images: {
-          select: {
-            id: true,
-          },
-        },
-      },
-    });
-
-    if (!post) {
-      throw new HttpException('Post not found.', HttpStatus.NOT_FOUND);
-    }
+    const tagsArray: Tag[] = tags
+      ? Array.from(
+        new Set(
+          tags
+            .split(',')
+            .map((item) => item.trim())
+            .map((item) => Tag[item])
+            .filter((tag) => !!tag),
+        ),
+      )
+      : post.tags;
 
     const updatedPost = await this.prisma.post.update({
       where: {
@@ -253,12 +280,7 @@ export class PostsService {
             ? authorsIdsArray.map((id) => ({ id: Number(id) }))
             : post.authors.map((author) => ({ id: author.id })),
         },
-        tags: tags
-          .split(',')
-          .map((item) => item.trim())
-          .map((item) => Tag[item])
-          .filter((tag) => !tag),
-        // tags: Array.from(new Set(tags.split(',').map((item) => item.trim()))),
+        tags: tagsArray,
       },
     });
 

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Module, ValidationPipe } from '@nestjs/common';
 import { PostsModule } from './posts/posts.module';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { ImagesModule } from './images/images.module';
@@ -15,7 +15,11 @@ import { CoreModule } from './core/core.module';
     DevtoolsModule.register({ http: process.env.NODE_ENV !== 'production' }),
     CoreModule,
   ],
+  // providers: [
+  //   {
+  //     provide: 'APP_PIPE',
+  //     useClass: ValidationPipe,
+  //   },
+  // ],
 })
-export class AppModule { }
-
-
+export class AppModule {}

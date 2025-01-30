@@ -12,7 +12,6 @@ import {
   HttpException,
   HttpStatus,
   UseGuards,
-  UseFilters,
 } from '@nestjs/common';
 import { PostsService } from './posts.service';
 import { CreatePostDto } from './dto/create-post.dto';
@@ -21,12 +20,10 @@ import { LocalOnlyGuard } from 'src/guards/local-only.guard';
 import { ApiBody, ApiResponse, ApiConsumes } from '@nestjs/swagger';
 import { Tag } from '@prisma/client';
 import { MarkdownFileInterceptor } from 'src/interceptors/markdown-file.interceptor';
-import { PrismaClientExceptionFilter } from 'src/prisma-client-exception/prisma-client-exception.filter';
 
 @Controller('posts')
 export class PostsController {
   constructor(private readonly postsService: PostsService) { }
-  @UseFilters(PrismaClientExceptionFilter)
   @Post()
   @ApiConsumes('multipart/form-data')
   @ApiResponse({
