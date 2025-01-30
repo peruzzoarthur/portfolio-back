@@ -23,7 +23,7 @@ import { MarkdownFileInterceptor } from 'src/interceptors/markdown-file.intercep
 
 @Controller('posts')
 export class PostsController {
-  constructor(private readonly postsService: PostsService) { }
+  constructor(private readonly postsService: PostsService) {}
   @Post()
   @ApiConsumes('multipart/form-data')
   @ApiResponse({
@@ -68,7 +68,7 @@ export class PostsController {
     const imagesPath = createPostDto.imagesPath;
     const authorsIds = createPostDto.authorsIds;
     const tags = createPostDto.tags;
-    const slug = createPostDto.slug
+    const slug = createPostDto.slug;
 
     const tagElements = tags.split(',').map((item) => item.trim());
 
@@ -95,7 +95,7 @@ export class PostsController {
       images: images,
       tags: tags,
       imagesPath: imagesPath,
-      slug: slug
+      slug: slug,
     });
   }
 

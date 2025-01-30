@@ -27,7 +27,11 @@ export class MarkdownFileInterceptor implements NestInterceptor {
     };
   }
 
-  private fileFilter(req: any, file: Express.Multer.File, callback: Function) {
+  protected fileFilter(
+    req: any,
+    file: Express.Multer.File,
+    callback: Function,
+  ) {
     if (
       !file.mimetype.includes('markdown') &&
       !file.mimetype.includes('text/plain')
