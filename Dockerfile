@@ -1,20 +1,28 @@
-# Base image
-FROM node:18
+# Use official Node.js image
+FROM node:18-alpine AS builder
 
-# Create app directory
+# Set working directory
 WORKDIR /usr/src/app
 
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-COPY package*.json ./
+# Copy package files and install dependencies
+COPY package.json package-lock.json ./
+RUN npm install --only=production
 
-# Install app dependencies
-RUN npm install
-
-# Bundle app source
+# Copy the entire project
 COPY . .
 
-# Creates a "dist" folder with the production build
+# Build the NestJS project
 RUN npm run build
 
-# Start the server using the production build
-CMD [ "node", "dist/main.js" ]
+# Use a lightweight Node.js image for production
+FROM node:18-alpine
+
+WORKDIR /usr/src/app
+
+# Copy built files and node_modules from builder
+COPY --from=builder /usr/src/app/node_modules ./node_modules
+COPY --from=builder /usr/src/app/dist ./dist
+
+# Set the command to start the application
+CMD ["node", "dist/main.js"]
+
